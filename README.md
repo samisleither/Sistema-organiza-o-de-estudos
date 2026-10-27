@@ -1,67 +1,78 @@
-# 🌌 Atlas — Sistema Inteligente de Rotina de Estudos
+# Atlas — Caderno de Estudos
 
-O **Atlas** é um sistema web e mobile projetado para organizar a rotina de estudos de vestibulandos, candidatos do ENEM e concurseiros até a data da prova. O seu principal diferencial é o **cronograma adaptativo que se ajusta automaticamente** quando o estudante não cumpre o planejado, eliminando a frustração do abandono do plano de estudos.
+O Atlas é uma aplicação web para organizar matérias, tópicos e sessões de estudo até a data da prova. O sistema reúne um diário do dia, um cronograma e revisões espaçadas.
 
----
+## Estado atual
 
-## 🚀 Funcionalidades Principais (Conforme spec.md)
+- Aplicação web Next.js publicada na Vercel.
+- Domínio de produção: https://atlas-sistema.vercel.app
+- Repositório GitHub privado: samisleither/AtlasSistema, branch main.
+- Supabase Auth e PostgreSQL usados para autenticação e persistência.
+- A pasta apps/mobile descrita em versões anteriores do README não existe neste repositório. Este repositório contém somente a aplicação web e o módulo TypeScript de regras de negócio.
+- O spec final descreve o estado real, as verificações relatadas e as pendências: [spec-sistema-organizacao-estudos.md](./spec-sistema-organizacao-estudos.md).
+- O histórico das mudanças está em [CHANGELOG.md](./CHANGELOG.md).
 
-| Requisito | Funcionalidade | Detalhes |
-|---|---|---|
-| **RF01-RF03** | Autenticação & Perfil | Cadastro com hash seguro nativo (Supabase/bcrypt), login e recuperação de senha. |
-| **RF04-RF05** | Matérias & Tópicos | Cadastro com 3 níveis de dificuldade (`fácil`, `médio`, `difícil`) e tópicos ordenados. |
-| **RF06-RF07** | Cronograma Automático | Distribuição inteligente até a data da prova com base nas horas diárias disponíveis, priorizando matérias difíceis. |
-| **RF08-RF09** | Dashboard Diário | Listagem limpa do que estudar hoje com botão de conclusão direta. |
-| **RF10** | Replanejamento Imediato (&lt; 1s) | Ao marcar *"Não fiz hoje"*, o algoritmo redistribui os tópicos pendentes nos próximos dias sem duplicar dados. |
-| **RF11** | Revisão Espaçada (1, 3, 7, 15 dias) | Criação automática de revisões no método Ebbinghaus assim que um tópico é concluído. |
-| **RF12** | Indicador de Ritmo | Exibe em tempo real se o estudante está *"No prazo"* ou *"Atrasado"*. |
-| **RF13-RF14** | Gestão & Exclusão de Conta | Edição/exclusão de matérias/tópicos e exclusão definitiva de conta com cascade de dados (LGPD). |
+## Funcionalidades presentes
 
----
+- Cadastro e login com e-mail e senha via Supabase Auth.
+- Solicitação de recuperação de senha por e-mail.
+- Perfil associado à conta de autenticação.
+- Criação de matérias com nível de dificuldade e criação de tópicos.
+- Geração de cronograma com prioridade por dificuldade, respeitando a disponibilidade semanal e a data da prova.
+- Diário com sessões de estudo do dia e revisões agendadas.
+- Registro de sessão concluída e de sessão não realizada.
+- Indicador de ritmo e avanço do plano.
+- Linha do tempo do cronograma.
+- Revisões espaçadas nos intervalos de 1, 3, 7 e 15 dias.
+- A aba separada de Métricas foi removida. O diário ainda mostra cartões básicos de ritmo e avanço.
 
-## 📂 Estrutura do Repositório
+Consulte a seção de limitações no spec antes de considerar todos os fluxos prontos para produção. Em particular, a redefinição final da senha, a exclusão de conta e a persistência do replanejamento precisam de correção/verificação.
 
-```
-atlas/
-├── schema.sql                     # Script SQL completo com tabelas, RLS e triggers (Supabase)
-├── packages/
-│   └── core/                      # Módulo compartilhado de regras de negócio (TS puro)
-│       ├── src/
-│       │   ├── types.ts           # Interfaces e tipos do sistema
-│       │   ├── scheduler.ts       # Algoritmo de distribuição por dificuldade (RF07)
-│       │   ├── rescheduler.ts     # Algoritmo de replanejamento adaptativo < 1s (RF10)
-│       │   ├── spacedRepetition.ts# Gerador de revisões D+1, D+3, D+7, D+15 (RF11)
-│       │   ├── paceIndicator.ts   # Cálculo do indicador de ritmo (RF12)
-│       │   └── index.ts
-├── apps/
-│   ├── web/                       # Aplicação Next.js 14 + Tailwind CSS (Web)
-│   │   ├── src/
-│   │   │   ├── app/               # Rotas e páginas do Next.js
-│   │   │   └── lib/supabase.ts    # Conexão com Supabase
-│   │   ├── package.json
-│   │   └── tailwind.config.js
-│   └── mobile/                    # Aplicação React Native / Expo (Mobile)
-```
+## Tecnologias e estrutura
 
----
+- Next.js 14, React 18 e TypeScript.
+- Tailwind CSS para estilos.
+- Supabase JS para autenticação e acesso ao banco.
+- packages/core/src contém tipos e regras puras de cronograma, replanejamento, revisões e indicador de ritmo.
 
-## 🛠️ Como Executar
+    apps/web/src/app/       páginas /, /cadastro, /login e /recuperar-senha
+    apps/web/src/lib/       cliente Supabase, contexto de autenticação e operações de dados
+    apps/web/src/components/Providers.tsx
+    packages/core/src/      tipos e algoritmos compartilhados
+    schema.sql              tabelas, políticas RLS, funções e triggers do Supabase
+    spec-sistema-organizacao-estudos.md
+    CHANGELOG.md
 
-### 1. Banco de Dados (Supabase)
-1. Crie um projeto gratuito em [supabase.com](https://supabase.com).
-2. Acesse o **SQL Editor** do Supabase.
-3. Cole o conteúdo de [schema.sql](./schema.sql) e execute.
-4. Copie a `SUPABASE_URL` e `SUPABASE_ANON_KEY` para as variáveis de ambiente.
+## Configuração local
 
-### 2. Frontend Web (Next.js)
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-Acesse [http://localhost:3000](http://localhost:3000).
+1. Crie um projeto Supabase e execute o conteúdo de schema.sql uma vez no SQL Editor, em um banco novo.
+2. Crie apps/web/.env.local com as variáveis abaixo. Use o Project URL e a chave Publishable do seu próprio projeto Supabase.
 
----
+    NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_SUA_CHAVE
 
-## 📱 Mobile (React Native / Expo)
-O mobile compartilha a mesma biblioteca de regras `@atlas/core`, conectando-se diretamente ao Supabase via REST/Realtime e garantindo que o algoritmo de replanejamento rode localmente ou via Edge Function.
+3. No PowerShell ou terminal, execute:
+
+    cd apps/web
+    npm install
+    npm run dev
+
+4. Acesse http://localhost:3000.
+
+O SQL atual é um script de instalação inicial, não um sistema de migrations e não deve ser reaplicado sem revisar objetos existentes. Nunca coloque a chave Supabase Secret ou service_role numa variável NEXT_PUBLIC ou no código do navegador.
+
+## Publicação
+
+A Vercel importa o repositório GitHub com Root Directory em apps/web. Configure NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY em Production e Preview. Alterações em variáveis exigem uma nova implantação.
+
+A Standard Protection mantém os endereços de preview protegidos, enquanto o domínio de produção fica acessível. O login do Supabase continua sendo a autenticação do Atlas; a proteção da Vercel é uma camada diferente.
+
+## Segurança e dados
+
+O schema ativa Row Level Security nas tabelas usuarios, materias, topicos, sessao_estudo e revisao. As tabelas de estudo restringem operações ao usuario_id autenticado. A chave Publishable pode aparecer no cliente, portanto a privacidade depende das políticas RLS corretas.
+
+O .gitignore exclui arquivos .env, arquivos .env.* e senha.txt. Não envie credenciais, tokens, senhas ou valores de ambiente ao GitHub.
+
+## Escopo não implementado
+
+Este repositório não contém aplicativo mobile, modo offline, notificações, simulados, relatórios de desempenho, gamificação ou painel administrativo. Também não contém uma tela /redefinir-senha. A lista completa das limitações e riscos conhecidos está no spec final.
